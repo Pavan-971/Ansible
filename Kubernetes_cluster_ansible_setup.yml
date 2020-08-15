@@ -108,7 +108,7 @@
 
 
      - name: Copying token
-       shell: tail -n 2 /root/Ansible/token.txt  > /root/Ansible/kub_token.sh
+       shell: tail -n 2 /root/Ansible/token.sh  > /root/Ansible/kub_token.sh
        when: "{{ inventory_hostname == 'master' }}"
 
 
