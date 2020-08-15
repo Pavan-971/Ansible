@@ -95,14 +95,43 @@
          enabled: yes
 
      - name: kubeadm intialisation
+       shell: kubeadm init --ignore-preflight-errors=all --token-ttl=0
+       register: output
+       when: "{{ inventory_hostname == 'master' }}"
+
+
+
+     - name: Getting token
+       local_action: copy content="{{ output.stdout }}" dest="token.sh"
+       when: "{{ inventory_hostname == 'master' }}"
+
+
+
+     - name: Copying token
+       shell: tail -n 2 token.txt  > kub_token
+       when: "{{ inventory_hostname == 'master' }}"
+
+
+
+
+     - name: Copying config file
        shell: |
-         kubeadm init
          mkdir -p $HOME/.kube
          cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
          chown $(id -u):$(id -g) $HOME/.kube/config
          export kubever=$(kubectl version | base64 | tr -d '\n')
          kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever"
-       when: inventory_hostname == "master"
+       when: "{{ inventory_hostname == 'master' }}"
+
+
+     - name: Fetch the file from to hosts
+       fetch: src=/root/proj/Ansible/token.sh dest=/tmp flat=yes
+       when: "{{ inventory_hostname == 'master' }}"
+
+
+     - name: Adding nodes
+       shell: /tmp/token.sh
+       when: "{{ inventory_hostname != 'master' }}"
 
 
           
