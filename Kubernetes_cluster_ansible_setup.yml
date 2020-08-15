@@ -102,13 +102,13 @@
 
 
      - name: Getting token
-       local_action: copy content="{{ output.stdout }}" dest="token.sh"
+       local_action: copy content="{{ output.stdout }}" dest="/root/Ansible/token.sh"
        when: "{{ inventory_hostname == 'master' }}"
 
 
 
      - name: Copying token
-       shell: tail -n 2 token.txt  > kub_token
+       shell: tail -n 2 /root/Ansible/token.txt  > /root/Ansible/kub_token.sh
        when: "{{ inventory_hostname == 'master' }}"
 
 
@@ -125,12 +125,12 @@
 
 
      - name: Fetch the file from to hosts
-       fetch: src=/root/proj/Ansible/token.sh dest=/tmp flat=yes
+       fetch: src=/root/Ansible/kub_token.sh dest=/tmp flat=yes
        when: "{{ inventory_hostname == 'master' }}"
 
 
      - name: Adding nodes
-       shell: /tmp/token.sh
+       shell: /tmp/kub_token.sh
        when: "{{ inventory_hostname != 'master' }}"
 
 
