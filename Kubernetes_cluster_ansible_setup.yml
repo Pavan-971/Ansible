@@ -125,7 +125,7 @@
 
 
      - name: Fetch the file from to hosts
-       fetch: src=/root/Ansible/kub_token.sh dest=/tmp flat=yes
+       fetch: src=/root/Ansible/kub_token.sh dest=/tmp/ flat=yes
        when: "{{ inventory_hostname == 'master' }}"
 
 
