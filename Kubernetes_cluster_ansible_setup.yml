@@ -1,0 +1,115 @@
+ - name: Kubernets_Setup
+   hosts: all
+   tasks:
+     - name: Firewall installation
+       yum:
+         name: firewalld
+         state: present
+
+     - name: Enabling firewalld service
+       service:
+         name: firewalld
+         state: restarted
+
+     - name: Restarting firewalld service
+       service:
+         name: firewalld
+         enabled: yes
+
+     - name: Modifying SELinux mode
+       selinux:
+         policy: targeted
+         state: permissive 
+
+     - name: Firewall configuration
+       shell: |
+         setenforce 0
+         sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+         
+     - name: Working firewalld
+       firewalld:
+         permanent: yes
+         state: enabled
+         port: "{{ item }}"
+       with_items:
+         - 6443/tcp
+         - 2379-2380/tcp
+         - 10250/tcp
+         - 10251/tcp
+         - 10252/tcp
+         - 10255/tcp
+         
+
+
+     - name: Required congfiguration
+       shell: |
+         modprobe br_netfilter
+         echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+         cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+         [kubernetes]
+         name=Kubernetes
+         baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+         enabled=1
+         gpgcheck=1
+         repo_gpgcheck=1
+         gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+         https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+         EOF
+
+
+     - name: Installing kubeadm
+       yum: 
+         name: kubeadm 
+         state: present
+
+     - name: Installinh docker
+       yum: 
+         name: docker
+         state: present
+
+
+
+     - name: docker service enabling
+       service:
+         name: docker
+         state: restarted
+
+
+
+     - name: docker service restarting
+       service:
+         name: docker
+         enabled: yes
+
+
+     - name: kublet service enabling
+       service:
+         name: kubelet
+         state: restarted
+
+
+
+     - name: Enabling kublet service
+       service:
+         name: kubelet
+         enabled: yes
+
+     - name: kubeadm intialisation
+       shell: |
+         kubeadm init
+         mkdir -p $HOME/.kube
+         cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+         chown $(id -u):$(id -g) $HOME/.kube/config
+         export kubever=$(kubectl version | base64 | tr -d '\n')
+         kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever"
+       when: inventory_hostname == "master"
+
+
+          
+
+
+
+
+
+
+
