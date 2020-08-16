@@ -124,13 +124,18 @@
        when: "{{ inventory_hostname == 'master' }}"
 
 
-     - name: Fetch the file from to hosts
-       fetch: src=/root/Ansible/kub_token.sh dest=/tmp/ flat=yes
+     - name: Copying token to nodes
+       copy:
+         src: /root/Ansible/kub_token.sh
+         dest: /tmp/kub_token.sh
        when: "{{ inventory_hostname != 'master' }}"
 
 
      - name: Adding nodes
-       shell: /tmp/kub_token.sh
+       shell: |
+         chmod 777 /tmp/kub_token.sh 
+         /tmp/kub_token.sh
+         rm -rf /tmp/kub_token.sh
        when: "{{ inventory_hostname != 'master' }}"
 
 
